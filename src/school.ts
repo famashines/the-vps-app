@@ -15,6 +15,15 @@ export const STAGES = [
   ["Secondary", grades(11, 12)],
 ] as [string, string[]][];
 
+export const FAMILY_STATUSES = [
+  ["both-parents-alive", "Both parents alive"],
+  ["father-deceased", "Father deceased (orphan)"],
+  ["mother-deceased", "Mother deceased"],
+  ["both-parents-deceased", "Both parents deceased"],
+] as [string, string][];
+
+export const familyStatusLabel = (status: string) => FAMILY_STATUSES.find(([value]) => value === status)?.[1] ?? status;
+
 export const gradeLabel = (grade: string) => GRADES.find(([value]) => value === grade)?.[1] ?? grade;
 export const stageOf = (grade: string) => STAGES.find(([, list]) => list.includes(grade))?.[0];
 

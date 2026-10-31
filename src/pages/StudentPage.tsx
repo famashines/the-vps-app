@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router";
 import { toLocal } from "../phone.ts";
 import { Icon } from "../icons";
-import { gradeLabel, isStale, send, showDate, todayInPakistan, type Answer } from "../school.ts";
+import { familyStatusLabel, gradeLabel, isStale, send, showDate, todayInPakistan, type Answer } from "../school.ts";
 import { signInUrl } from "../session";
 import type { Student } from "./Students";
 
@@ -80,13 +80,16 @@ function Leaving({ student, onDone }: { student: Student; onDone: () => void }) 
 export function StudentPage() {
   const { studentId } = useParams();
   const [student, setStudent] = useState<Student | "missing" | "failed">();
+  const [all, setAll] = useState<Student[]>([]);
 
   const load = useCallback(() => {
     fetch("/api/students")
       .then(async (r) => {
         if (r.status === 401) return location.assign(signInUrl());
         if (!r.ok) return setStudent("failed");
-        setStudent(((await r.json()) as Student[]).find((s) => s.studentId === studentId) ?? "missing");
+        const students = (await r.json()) as Student[];
+        setAll(students);
+        setStudent(students.find((s) => s.studentId === studentId) ?? "missing");
       })
       .catch(() => setStudent("failed"));
   }, [studentId]);
@@ -109,6 +112,8 @@ export function StudentPage() {
 
   const name = `${student.firstName} ${student.lastName}`;
   const enrollment = student.enrollments[0];
+  const siblings = all.filter((s) => student.siblings?.studentIds.includes(s.studentId) || s.siblings?.studentIds.includes(student.studentId));
+  const notGiven = "Not given";
 
   return (
     <>
@@ -175,6 +180,39 @@ export function StudentPage() {
             <dt>Phone</dt>
             <dd className="num">
               <a href={`tel:${student.guardian.phone}`}>{toLocal(student.guardian.phone)}</a>
+            </dd>
+          </div>
+          <div>
+            <dt>Guardian CNIC</dt>
+            <dd className="num">{student.guardian.cnic ?? notGiven}</dd>
+          </div>
+          <div>
+            <dt>B-Form number</dt>
+            <dd className="num">{student.bFormNumber ?? notGiven}</dd>
+          </div>
+          <div>
+            <dt>Home address</dt>
+            <dd>{student.address ?? notGiven}</dd>
+          </div>
+          <div>
+            <dt>Family status</dt>
+            <dd>
+              {student.familyStatus ? familyStatusLabel(student.familyStatus) : notGiven}
+              {student.familyStatusNote && <span className="fact-line">{student.familyStatusNote}</span>}
+            </dd>
+          </div>
+          <div>
+            <dt>Brothers and sisters</dt>
+            <dd>
+              {student.siblings ? student.siblings.count : notGiven}
+              {siblings.map((s) => (
+                <span key={s.studentId} className="fact-line">
+                  <Link to={`/students/${s.studentId}`}>
+                    {s.firstName} {s.lastName}
+                  </Link>{" "}
+                  <span className="num">{s.admissionNumber}</span>
+                </span>
+              ))}
             </dd>
           </div>
           {student.leftReason && (
