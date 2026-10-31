@@ -31,7 +31,7 @@ jobs:
           tag="sha-${SHA}"
           short="${SHA::7}"
           branch="release/the-vps-app-${ENVIRONMENT}-${short}"
-          sed -i "s|newTag: .*|newTag: ${tag}|" "kubernetes/the-vps-app/overlays/${ENVIRONMENT}/kustomization.yaml"
+          sed -i "s|newTag: .*|newTag: ${tag}|" "kubernetes/the-vps/the-vps-app/${ENVIRONMENT}/kustomization.yaml"
           if git diff --quiet; then
             echo "${ENVIRONMENT} already uses ${tag}"
             exit 0

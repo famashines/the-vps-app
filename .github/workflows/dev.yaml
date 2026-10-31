@@ -22,6 +22,7 @@ jobs:
         with:
           push: true
           tags: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+          build-args: RELEASE=${{ github.sha }}
 
   release:
     needs: build
