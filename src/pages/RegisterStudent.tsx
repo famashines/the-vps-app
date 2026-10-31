@@ -1,8 +1,9 @@
-import { Button, Group, NativeSelect, Radio, Text, TextInput, Title } from "@mantine/core";
+import { Button, Group, MultiSelect, NativeSelect, Radio, Text, Textarea, TextInput, Title } from "@mantine/core";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router";
+import { toCnic } from "../cnic.ts";
 import { toE164, toLocal } from "../phone.ts";
-import { birthDateLimits, classGroups, currentYear, gradeLabel, isStale, send, todayInPakistan, type Year } from "../school.ts";
+import { FAMILY_STATUSES, birthDateLimits, classGroups, currentYear, gradeLabel, isStale, send, todayInPakistan, type Year } from "../school.ts";
 import { signInUrl } from "../session";
 import type { Student } from "./Students";
 
@@ -14,13 +15,22 @@ const labels: Record<string, string> = {
   fatherName: "Father name",
   dateOfBirth: "Date of birth",
   gender: "Gender",
+  bFormNumber: "B-Form number",
   "guardian.name": "Guardian name",
   "guardian.relation": "Relation",
   "guardian.phone": "Phone",
+  "guardian.cnic": "Guardian CNIC",
+  address: "Home address",
+  familyStatus: "Family status",
+  "siblings.count": "Brothers and sisters",
+  familyStatusNote: "Note",
+  "siblings.studentIds": "Siblings in this school",
 };
 
 const messageFor = (field: string, message: string) => {
+  if (/^[A-Z]/.test(message)) return message;
   if (field === "guardian.phone") return "Enter a mobile number, for example 0300 1234567.";
+  if (field === "bFormNumber" || field === "guardian.cnic") return "Enter the 13 digits, for example 35202-1234567-8.";
   if (field === "dateOfBirth") return message.includes("years old") ? "The student must be 2 to 25 years old." : "Enter a real date.";
   if (message === "is required") return `${labels[field] ?? field} is required.`;
   return `${labels[field] ?? field} ${message}.`;
@@ -61,8 +71,15 @@ const detailsOf = (s: Student) => ({
   fatherName: s.fatherName,
   dateOfBirth: s.dateOfBirth,
   gender: s.gender,
-  guardian: { name: s.guardian.name, relation: s.guardian.relation, phone: s.guardian.phone },
+  guardian: { name: s.guardian.name, relation: s.guardian.relation, phone: s.guardian.phone, cnic: s.guardian.cnic },
+  bFormNumber: s.bFormNumber,
+  address: s.address,
+  familyStatus: s.familyStatus,
+  ...(s.familyStatusNote && { familyStatusNote: s.familyStatusNote }),
+  siblings: s.siblings,
 });
+
+const studentLabel = (s: Student) => `${s.firstName} ${s.lastName} (${s.admissionNumber})`;
 
 export function RegisterStudent({ student }: { student?: Student }) {
   const navigate = useNavigate();
@@ -79,6 +96,14 @@ export function RegisterStudent({ student }: { student?: Student }) {
   const [guardianName, setGuardianName] = useState(student?.guardian.name ?? "");
   const [linked, setLinked] = useState(!student || (student.guardian.relation === "father" && student.guardian.name === student.fatherName));
   const enrollment = student?.enrollments[0];
+  const [others, setOthers] = useState<Student[]>([]);
+  const [siblingIds, setSiblingIds] = useState<string[]>(student?.siblings?.studentIds ?? []);
+
+  useEffect(() => {
+    fetch("/api/students")
+      .then(async (r) => r.ok && setOthers(((await r.json()) as Student[]).filter((s) => s.studentId !== student?.studentId)))
+      .catch(() => setOthers([]));
+  }, [student?.studentId]);
 
   useEffect(() => {
     fetch("/api/academic-years")
@@ -101,7 +126,12 @@ export function RegisterStudent({ student }: { student?: Student }) {
       fatherName: value("fatherName"),
       dateOfBirth: value("dateOfBirth"),
       gender: value("gender"),
-      guardian: { name: value("guardian.name"), relation: value("guardian.relation"), phone: toE164(value("guardian.phone")) },
+      guardian: { name: value("guardian.name"), relation: value("guardian.relation"), phone: toE164(value("guardian.phone")), cnic: toCnic(value("guardian.cnic")) },
+      bFormNumber: toCnic(value("bFormNumber")),
+      address: value("address"),
+      familyStatus: value("familyStatus"),
+      ...(value("familyStatusNote") && { familyStatusNote: value("familyStatusNote") }),
+      siblings: { count: Number(value("siblings.count")), studentIds: siblingIds },
     };
     setSaving(true);
     setProblem(undefined);
@@ -195,6 +225,13 @@ export function RegisterStudent({ student }: { student?: Student }) {
               </Group>
             </Radio.Group>
           </div>
+          {line("bFormNumber", "B-Form number", {
+            inputMode: "numeric",
+            placeholder: "35202-1234567-8",
+            autoComplete: "off",
+            description: "The 13 digits on the B-Form (child registration certificate).",
+            defaultValue: student?.bFormNumber ?? undefined,
+          })}
           <NativeSelect
             key={year?.academicYearId}
             name="classId"
@@ -256,6 +293,76 @@ export function RegisterStudent({ student }: { student?: Student }) {
             />
             {line("guardian.phone", "Phone", { type: "tel", inputMode: "tel", placeholder: "0300 1234567", autoComplete: "off", defaultValue: student && toLocal(student.guardian.phone) })}
           </div>
+          {line("guardian.cnic", "Guardian CNIC", { inputMode: "numeric", placeholder: "35202-1234567-8", autoComplete: "off", defaultValue: student?.guardian.cnic ?? undefined })}
+          <Textarea
+            name="address"
+            label="Home address"
+            placeholder="House, street, area, city"
+            maxLength={300}
+            autosize
+            minRows={2}
+            defaultValue={student?.address ?? undefined}
+            error={errors.address}
+            onChange={() => clear("address")}
+            classNames={{ input: "field-input" }}
+            required
+            withAsterisk={false}
+          />
+        </fieldset>
+        <fieldset className="entry">
+          <legend>Family</legend>
+          <Text className="entry-hint">The office uses this for orphan support and sibling fees.</Text>
+          <div className="pair">
+            <NativeSelect
+              name="familyStatus"
+              label="Family status"
+              data={[...(student?.familyStatus ? [] : [{ value: "", label: "Choose", disabled: true }]), ...FAMILY_STATUSES.map(([value, label]) => ({ value, label }))]}
+              defaultValue={student?.familyStatus ?? ""}
+              error={errors.familyStatus}
+              onChange={() => clear("familyStatus")}
+              classNames={{ input: "field-input" }}
+              required
+              withAsterisk={false}
+            />
+            {line("siblings.count", "Brothers and sisters", {
+              type: "number",
+              min: 0,
+              max: 20,
+              inputMode: "numeric",
+              description: "All of them, also those not at this school.",
+              inputWrapperOrder: ["label", "input", "description", "error"],
+              defaultValue: student?.siblings?.count ?? undefined,
+            })}
+          </div>
+          <Textarea
+            name="familyStatusNote"
+            label="Note (optional)"
+            description="For example, who looks after the student."
+            maxLength={500}
+            autosize
+            minRows={2}
+            defaultValue={student?.familyStatusNote ?? undefined}
+            error={errors.familyStatusNote}
+            onChange={() => clear("familyStatusNote")}
+            classNames={{ input: "field-input" }}
+          />
+          <MultiSelect
+            name="siblings.studentIds"
+            label="Siblings in this school"
+            description="Search by name or admission number. Leave empty when none study here."
+            data={others.map((s) => ({ value: s.studentId, label: studentLabel(s) }))}
+            value={siblingIds}
+            onChange={(ids) => {
+              clear("siblings.studentIds");
+              setSiblingIds(ids);
+            }}
+            searchable
+            clearable
+            nothingFoundMessage="No student with this name or number."
+            maxValues={20}
+            error={errors["siblings.studentIds"]}
+            classNames={{ input: "field-input" }}
+          />
         </fieldset>
         <Group gap="sm" className="form-actions">
           <Button type="submit" loading={saving}>
