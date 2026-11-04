@@ -12,6 +12,10 @@ test("finds a student by phone in any format", () => {
   for (const query of ["0300 777", "03007778899", "+92 300 7778899", "923007778899", "7778899"]) assert.ok(findsStudent(usman, query), query);
 });
 
+test("finds a student by the second phone", () => {
+  assert.ok(findsStudent({ ...usman, guardian: { ...usman.guardian, phone2: "+923211234567" } }, "0321 1234567"));
+});
+
 test("does not find a student that does not match", () => {
   for (const query of ["ayesha", "0321", "12", "2025-0006"]) assert.ok(!findsStudent(usman, query), query);
 });
