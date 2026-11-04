@@ -18,18 +18,21 @@ image to prod. Each pull request builds the image once as a check.
 
 ## Design
 
-- Paper `#fcfdff` (page), sheet `#ffffff` (panels), wash `#f3f6fb` (menu,
-  table head, form footer), ink `#1c2541`, royal ink `#2b4c9b` (actions, the
-  active menu item, admission numbers), ruling `#d5e0f2` (lines and panel
-  borders), danger `#b42318` (errors only), slate `#5d6784` (second-level
-  text). Amber `#fdf3e3` marks work to do, for example a student with no class.
-- One typeface: Atkinson Hyperlegible Next, self-hosted, with tabular figures
-  for numbers and dates.
+- Material 3 Expressive, on top of Mantine, used with restraint. There is no
+  official React library for it, so the tokens are in `src/theme.ts` and at the
+  top of `src/app.css` (`--md-*`, the M3 color roles, from the Fidelity scheme
+  of `@material/material-color-utilities` with the seed `#2b4c9b`).
+- Shape: 8, 12, 16, 28 and 48 px, and pills for buttons, menu items and the
+  search. A button morphs to a smaller radius when pressed (`--md-spring`).
+  Cards are tonal, with no border. No surface is pure white or a bright tint:
+  use the `--md-surface-*` and `--md-*-container` tokens, which have low chroma.
+- One typeface: Google Sans Flex, self-hosted, medium weight for figures and
+  titles, with tabular figures for numbers and dates.
 - The one strong element is the search ("Search or go to", like GitLab). Press
   `/` or Ctrl+K on any page. It finds pages, and students by name, father
   name, guardian, admission number or phone (`0300...` and `+92300...` both
   match). A student result opens the Students page with that row marked.
-  Keep the rest quiet: white panels with one thin border.
+  Keep the rest quiet: white panels on a tinted page.
 - The search sits in a sticky top bar above the page, centered, as in GitLab.
   The page is centered in the space next to the menu.
 - The menu holds the school name (a link to the Dashboard), the pages, the
@@ -37,10 +40,12 @@ image to prod. Each pull request builds the image once as a check.
   bar, which also has a search button.
 - Every state names the next step: an empty list offers "Register student", a
   failed list offers "Reload page".
-- The Dashboard shows the current school year: how many students are in a
-  class, and how many still need one, with a link to enroll them. Then the
-  five most recent registrations. Parts that are not built yet are listed
-  under "Coming next", with no numbers.
+- The Dashboard is a bento grid of tonal cards. Its one strong element is the
+  fees hero with the wavy progress ring. Connected button groups change the
+  charts, and the stat icons sit in a cookie shape that morphs on hover. The
+  charts are plain HTML, CSS and SVG, with no chart library. The chart colors
+  in `--chart-*` passed the color-blind check. The API has no history, so the
+  page shows no change from last week.
 - `src/app.css` is one global file. Before you add a class, search the file
   for the name: a name that is already in use (for example `.entry` of the
   form fieldsets) also gives its padding and grid to the new element.

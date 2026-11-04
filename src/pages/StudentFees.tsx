@@ -66,7 +66,7 @@ function Slip({ payment, student, account, user }: { payment: Payment; student: 
 
 function Receipt({ payment, student, account, user, onClose }: { payment?: Payment; student: Student; account: Account; user: User; onClose: () => void }) {
   return (
-    <Modal opened={!!payment} onClose={onClose} title="Receipt" centered radius="md" size="lg">
+    <Modal opened={!!payment} onClose={onClose} title="Receipt" centered size="lg">
       {payment && (
         <>
           <Slip payment={payment} student={student} account={account} user={user} />
@@ -113,7 +113,7 @@ function TakePayment({ account, opened, onClose, onPaid }: { account: Account; o
   }
 
   return (
-    <Modal opened={opened} onClose={onClose} title="Take payment" centered radius="md">
+    <Modal opened={opened} onClose={onClose} title="Take payment" centered>
       <form onSubmit={submit} className="edit-form">
         <TextInput
           name="amount"
@@ -169,7 +169,7 @@ function Reverse({ target, onClose, onDone }: { target?: Target; onClose: () => 
   }
 
   return (
-    <Modal opened={!!target} onClose={onClose} title={shown && `Reverse ${shown.kind}`} centered radius="md">
+    <Modal opened={!!target} onClose={onClose} title={shown && `Reverse ${shown.kind}`} centered>
       <form onSubmit={submit} className="edit-form">
         <Text className="panel-text">
           {shown?.label}. The full amount is reversed. The entry stays in the ledger with the reason{shown?.kind === "payment" ? ", and its receipt number is not used again" : ""}.

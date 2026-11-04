@@ -76,7 +76,7 @@ function SetFees({ year, grade, schedule, onClose, onSaved }: { year: Year; grad
   );
 
   return (
-    <Modal opened={!!grade} onClose={onClose} title={shown && `Fees of ${gradeLabel(shown)}, ${year.name}`} centered radius="md">
+    <Modal opened={!!grade} onClose={onClose} title={shown && `Fees of ${gradeLabel(shown)}, ${year.name}`} centered>
       <form onSubmit={submit} className="edit-form">
         {field("monthlyFee", "Monthly fee", "Charged on the 1st of each month, due by the 10th.")}
         <div className="pair">

@@ -47,7 +47,7 @@ export function EnrollDialog({ student, onClose, onEnrolled }: {
   }
 
   return (
-    <Modal opened={!!student} onClose={onClose} title={title} centered radius="md">
+    <Modal opened={!!student} onClose={onClose} title={title} centered>
       {years === undefined ? (
         <Text className="state-text">Loading classes.</Text>
       ) : classes.length === 0 ? (

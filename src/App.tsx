@@ -86,7 +86,7 @@ function Shell({ user }: { user: User }) {
         </AppShell.Section>
         <AppShell.Section className="navbar-user">
           <Group gap="sm" wrap="nowrap">
-            <Avatar name={user.name} color="ink" size={34} radius="xl" />
+            <Avatar name={user.name} color="accent" size={34} radius="xl" />
             <Text className="user-name" truncate>
               {user.name}
             </Text>

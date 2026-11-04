@@ -91,7 +91,7 @@ function EditDialog({ title, opened, onClose, onSave, children }: {
   const fields = failed?.fields ?? {};
 
   return (
-    <Modal opened={opened} onClose={onClose} title={title} centered radius="md">
+    <Modal opened={opened} onClose={onClose} title={title} centered>
       <form onSubmit={submit} className="edit-form">
         {children(fields)}
         {failed && !Object.keys(fields).length && (

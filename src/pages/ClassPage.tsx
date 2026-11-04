@@ -39,7 +39,7 @@ function RemoveClass({ year, schoolClass }: { year: Year; schoolClass: SchoolCla
       <Button variant="default" className="danger-button" onClick={() => setOpened(true)}>
         Remove class
       </Button>
-      <Modal opened={opened} onClose={() => setOpened(false)} title={`Remove ${label}, ${year.name}?`} centered radius="md">
+      <Modal opened={opened} onClose={() => setOpened(false)} title={`Remove ${label}, ${year.name}?`} centered>
         <Text>The class has no students. You can open it again later on the Classes page.</Text>
         {problem && (
           <div className="problem" role="alert">
