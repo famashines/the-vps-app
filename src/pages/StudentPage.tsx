@@ -177,10 +177,22 @@ export function StudentPage() {
             </dd>
           </div>
           <div>
-            <dt>Phone</dt>
+            <dt>Phone No 1</dt>
             <dd className="num">
               <a href={`tel:${student.guardian.phone}`}>{toLocal(student.guardian.phone)}</a>
             </dd>
+          </div>
+          <div>
+            <dt>Phone No 2</dt>
+            <dd className="num">{student.guardian.phone2 ? <a href={`tel:${student.guardian.phone2}`}>{toLocal(student.guardian.phone2)}</a> : notGiven}</dd>
+          </div>
+          <div>
+            <dt>Previous school name</dt>
+            <dd>{student.previousSchoolName ?? notGiven}</dd>
+          </div>
+          <div>
+            <dt>Previous class</dt>
+            <dd>{student.previousClass ?? notGiven}</dd>
           </div>
           <div>
             <dt>Guardian CNIC</dt>

@@ -16,10 +16,13 @@ const labels: Record<string, string> = {
   dateOfBirth: "Date of birth",
   gender: "Gender",
   bFormNumber: "B-Form number",
+  previousSchoolName: "Previous school name",
+  previousClass: "Previous class",
   "guardian.name": "Guardian name",
   "guardian.relation": "Relation",
-  "guardian.phone": "Phone",
   "guardian.cnic": "Guardian CNIC",
+  "guardian.phone": "Phone No 1",
+  "guardian.phone2": "Phone No 2",
   address: "Home address",
   familyStatus: "Family status",
   "siblings.count": "Brothers and sisters",
@@ -29,7 +32,7 @@ const labels: Record<string, string> = {
 
 const messageFor = (field: string, message: string) => {
   if (/^[A-Z]/.test(message)) return message;
-  if (field === "guardian.phone") return "Enter a mobile number, for example 0300 1234567.";
+  if (field === "guardian.phone" || field === "guardian.phone2") return "Enter a mobile number, for example 0300 1234567.";
   if (field === "bFormNumber" || field === "guardian.cnic") return "Enter the 13 digits, for example 35202-1234567-8.";
   if (field === "dateOfBirth") return message.includes("years old") ? "The student must be 2 to 25 years old." : "Enter a real date.";
   if (message === "is required") return `${labels[field] ?? field} is required.`;
@@ -71,12 +74,14 @@ const detailsOf = (s: Student) => ({
   fatherName: s.fatherName,
   dateOfBirth: s.dateOfBirth,
   gender: s.gender,
-  guardian: { name: s.guardian.name, relation: s.guardian.relation, phone: s.guardian.phone, cnic: s.guardian.cnic },
+  guardian: { name: s.guardian.name, relation: s.guardian.relation, phone: s.guardian.phone, ...(s.guardian.phone2 && { phone2: s.guardian.phone2 }), cnic: s.guardian.cnic },
   bFormNumber: s.bFormNumber,
   address: s.address,
   familyStatus: s.familyStatus,
   ...(s.familyStatusNote && { familyStatusNote: s.familyStatusNote }),
   siblings: s.siblings,
+  ...(s.previousSchoolName && { previousSchoolName: s.previousSchoolName }),
+  ...(s.previousClass && { previousClass: s.previousClass }),
 });
 
 const studentLabel = (s: Student) => `${s.firstName} ${s.lastName} (${s.admissionNumber})`;
@@ -126,12 +131,14 @@ export function RegisterStudent({ student }: { student?: Student }) {
       fatherName: value("fatherName"),
       dateOfBirth: value("dateOfBirth"),
       gender: value("gender"),
-      guardian: { name: value("guardian.name"), relation: value("guardian.relation"), phone: toE164(value("guardian.phone")), cnic: toCnic(value("guardian.cnic")) },
+      guardian: { name: value("guardian.name"), relation: value("guardian.relation"), phone: toE164(value("guardian.phone")), ...(value("guardian.phone2") && { phone2: toE164(value("guardian.phone2")) }), cnic: toCnic(value("guardian.cnic")) },
       bFormNumber: toCnic(value("bFormNumber")),
       address: value("address"),
       familyStatus: value("familyStatus"),
       ...(value("familyStatusNote") && { familyStatusNote: value("familyStatusNote") }),
       siblings: { count: Number(value("siblings.count")), studentIds: siblingIds },
+      ...(value("previousSchoolName") && { previousSchoolName: value("previousSchoolName") }),
+      ...(value("previousClass") && { previousClass: value("previousClass") }),
     };
     setSaving(true);
     setProblem(undefined);
@@ -253,10 +260,14 @@ export function RegisterStudent({ student }: { student?: Student }) {
             disabled={!year || year.classes.length === 0}
             classNames={{ input: "field-input" }}
           />
+          <div className="pair">
+            {line("previousSchoolName", "Previous school name (optional)", { required: false, maxLength: 200, autoComplete: "off", defaultValue: student?.previousSchoolName ?? undefined })}
+            {line("previousClass", "Previous class (optional)", { required: false, maxLength: 50, autoComplete: "off", defaultValue: student?.previousClass ?? undefined })}
+          </div>
         </fieldset>
         <fieldset className="entry">
           <legend>Guardian</legend>
-          <Text className="entry-hint">The office uses this phone number to reach the family.</Text>
+          <Text className="entry-hint">The office uses these phone numbers to reach the family.</Text>
           {line("guardian.name", "Guardian name", {
             autoComplete: "off",
             value: shownGuardian,
@@ -291,9 +302,12 @@ export function RegisterStudent({ student }: { student?: Student }) {
               required
               withAsterisk={false}
             />
-            {line("guardian.phone", "Phone", { type: "tel", inputMode: "tel", placeholder: "0300 1234567", autoComplete: "off", defaultValue: student && toLocal(student.guardian.phone) })}
+            {line("guardian.cnic", "Guardian CNIC", { inputMode: "numeric", placeholder: "35202-1234567-8", autoComplete: "off", defaultValue: student?.guardian.cnic ?? undefined })}
           </div>
-          {line("guardian.cnic", "Guardian CNIC", { inputMode: "numeric", placeholder: "35202-1234567-8", autoComplete: "off", defaultValue: student?.guardian.cnic ?? undefined })}
+          <div className="pair">
+            {line("guardian.phone", "Phone No 1", { type: "tel", inputMode: "tel", placeholder: "0300 1234567", autoComplete: "off", defaultValue: student && toLocal(student.guardian.phone) })}
+            {line("guardian.phone2", "Phone No 2 (optional)", { required: false, type: "tel", inputMode: "tel", placeholder: "0321 1234567", autoComplete: "off", defaultValue: student?.guardian.phone2 ? toLocal(student.guardian.phone2) : undefined })}
+          </div>
           <Textarea
             name="address"
             label="Home address"

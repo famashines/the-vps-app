@@ -18,12 +18,14 @@ export type Student = {
   fatherName: string | null;
   dateOfBirth: string;
   gender: string;
-  guardian: { name: string; relation: string; phone: string; cnic: string | null };
+  guardian: { name: string; relation: string; phone: string; phone2: string | null; cnic: string | null };
   bFormNumber: string | null;
   address: string | null;
   familyStatus: string | null;
   familyStatusNote: string | null;
   siblings: { count: number; studentIds: string[] } | null;
+  previousSchoolName: string | null;
+  previousClass: string | null;
   leftOn: string | null;
   leftReason: string | null;
   enrollments: Enrollment[];
