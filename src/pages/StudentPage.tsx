@@ -42,7 +42,7 @@ function Leaving({ student, onDone }: { student: Student; onDone: () => void }) 
       <Button variant="default" className={student.leftOn ? undefined : "danger-button"} onClick={() => { setAnswer(undefined); setCancelling(student.leftOn); setOpened(true); }}>
         {student.leftOn ? "Cancel leaving" : "Mark as left"}
       </Button>
-      <Modal opened={opened} onClose={() => setOpened(false)} title={cancelling ? `Cancel the leaving of ${name}?` : `Mark ${name} as left?`} centered radius="md">
+      <Modal opened={opened} onClose={() => setOpened(false)} title={cancelling ? `Cancel the leaving of ${name}?` : `Mark ${name} as left?`} centered>
         <form onSubmit={submit} className="edit-form">
           {cancelling ? (
             <Text>The student is active again. The monthly fees after {showDate(cancelling)} are charged again.</Text>

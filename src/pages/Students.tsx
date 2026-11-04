@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
 import type { AccountSummary } from "../fees.ts";
 import { findsStudent } from "../find.ts";
 import { Icon } from "../icons";
+import { toLocal } from "../phone.ts";
 import { gradeLabel } from "../school.ts";
 import { EnrollDialog, type Enrollment } from "./EnrollDialog";
 import { balanceText } from "./StudentFees";
@@ -201,7 +202,7 @@ export function Students() {
                       </Table.Td>
                       <Table.Td>{showDate(s.dateOfBirth)}</Table.Td>
                       <Table.Td>{s.guardian.name}</Table.Td>
-                      <Table.Td className="num">{s.guardian.phone}</Table.Td>
+                      <Table.Td className="num">{toLocal(s.guardian.phone)}</Table.Td>
                       <Table.Td className="row-action">
                         <Button component={Link} to={`/students/${s.studentId}/edit`} variant="subtle" size="compact-sm" aria-label={`Edit ${s.firstName} ${s.lastName}`}>
                           Edit
