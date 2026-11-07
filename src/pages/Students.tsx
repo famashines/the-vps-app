@@ -18,6 +18,7 @@ export type Student = {
   lastName: string;
   fatherName: string | null;
   dateOfBirth: string;
+  admissionDate: string;
   gender: string;
   guardian: { name: string; relation: string; phone: string; phone2: string | null; cnic: string | null };
   bFormNumber: string | null;
@@ -29,6 +30,7 @@ export type Student = {
   previousClass: string | null;
   leftOn: string | null;
   leftReason: string | null;
+  hasPhoto: boolean;
   enrollments: Enrollment[];
 };
 type State = { status: "loading" } | { status: "failed" } | { status: "loaded"; students: Student[] };
@@ -66,7 +68,7 @@ export function Students() {
   const [enrolling, setEnrolling] = useState<{ studentId: string; name: string }>();
   const [enrolled, setEnrolled] = useState<string>();
   const [balances, setBalances] = useState<Map<string, number>>();
-  type Note = { studentId: string; admissionNumber: string; name: string; enrolledIn?: string; enrollProblem?: string };
+  type Note = { studentId: string; admissionNumber: string; name: string; enrolledIn?: string; enrollProblem?: string; photoProblem?: string };
   const { registered, updated } = (useLocation().state ?? {}) as { registered?: Note; updated?: Note };
   const marked = registered?.studentId ?? updated?.studentId;
   const navigate = useNavigate();
@@ -117,6 +119,7 @@ export function Students() {
             Registered {registered.name} as <strong>{registered.admissionNumber}</strong>
             {registered.enrolledIn ? ` in ${registered.enrolledIn}.` : "."}
             {registered.enrollProblem && ` The enrollment did not work: ${registered.enrollProblem} Use Enroll in the list.`}
+            {registered.photoProblem && ` ${registered.photoProblem} Add it with Edit.`}
           </Text>
         </div>
       )}
@@ -126,6 +129,7 @@ export function Students() {
           <Text>
             Saved the changes to {updated.name}, <strong>{updated.admissionNumber}</strong>.{updated.enrolledIn && ` The class is now ${updated.enrolledIn}.`}
             {updated.enrollProblem && ` The class did not change: ${updated.enrollProblem}`}
+            {updated.photoProblem && ` ${updated.photoProblem}`}
           </Text>
         </div>
       )}

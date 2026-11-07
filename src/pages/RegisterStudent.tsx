@@ -1,7 +1,8 @@
-import { Button, Group, MultiSelect, NativeSelect, Radio, Text, Textarea, TextInput, Title } from "@mantine/core";
+import { Avatar, Button, FileButton, Group, MultiSelect, NativeSelect, Radio, Text, Textarea, TextInput, Title } from "@mantine/core";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { toCnic } from "../cnic.ts";
+import { cnicAsTyped, toCnic } from "../cnic.ts";
+import { capitalizeWords } from "../names.ts";
 import { toE164, toLocal } from "../phone.ts";
 import { FAMILY_STATUSES, birthDateLimits, classGroups, currentYear, gradeLabel, isStale, send, todayInPakistan, type Year } from "../school.ts";
 import { signInUrl } from "../session";
@@ -14,6 +15,7 @@ const labels: Record<string, string> = {
   lastName: "Last name",
   fatherName: "Father name",
   dateOfBirth: "Date of birth",
+  admissionDate: "Admission date",
   gender: "Gender",
   bFormNumber: "B-Form number",
   previousSchoolName: "Previous school name",
@@ -35,6 +37,7 @@ const messageFor = (field: string, message: string) => {
   if (field === "guardian.phone" || field === "guardian.phone2") return "Enter a mobile number, for example 0300 1234567.";
   if (field === "bFormNumber" || field === "guardian.cnic") return "Enter the 13 digits, for example 35202-1234567-8.";
   if (field === "dateOfBirth") return message.includes("years old") ? "The student must be 2 to 25 years old." : "Enter a real date.";
+  if (field === "admissionDate") return "Enter a real date.";
   if (message === "is required") return `${labels[field] ?? field} is required.`;
   return `${labels[field] ?? field} ${message}.`;
 };
@@ -73,6 +76,7 @@ const detailsOf = (s: Student) => ({
   lastName: s.lastName,
   fatherName: s.fatherName,
   dateOfBirth: s.dateOfBirth,
+  admissionDate: s.admissionDate,
   gender: s.gender,
   guardian: { name: s.guardian.name, relation: s.guardian.relation, phone: s.guardian.phone, ...(s.guardian.phone2 && { phone2: s.guardian.phone2 }), cnic: s.guardian.cnic },
   bFormNumber: s.bFormNumber,
@@ -85,6 +89,38 @@ const detailsOf = (s: Student) => ({
 });
 
 const studentLabel = (s: Student) => `${s.firstName} ${s.lastName} (${s.admissionNumber})`;
+
+function retype(input: HTMLInputElement, format: (value: string) => string) {
+  const caret = format(input.value.slice(0, input.selectionStart ?? input.value.length)).length;
+  const next = format(input.value);
+  if (next === input.value) return;
+  input.value = next;
+  input.setSelectionRange(caret, caret);
+}
+
+type Photo = { preview: string; file: Blob };
+
+async function toPhoto(file: File, longest = 480): Promise<Photo> {
+  const image = await createImageBitmap(file);
+  const scale = Math.min(1, longest / Math.max(image.width, image.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(image.width * scale);
+  canvas.height = Math.round(image.height * scale);
+  canvas.getContext("2d")!.drawImage(image, 0, 0, canvas.width, canvas.height);
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.85));
+  if (!blob) throw new Error("no picture");
+  return { preview: canvas.toDataURL("image/jpeg", 0.85), file: blob };
+}
+
+async function uploadPhoto(studentId: string, photo: Photo) {
+  try {
+    const response = await fetch(`/api/students/${studentId}/photo`, { method: "PUT", headers: { "content-type": "image/jpeg" }, body: photo.file });
+    if (response.ok) return undefined;
+    return ((await response.json().catch(() => ({}))) as { error?: string }).error ?? "The photo was not saved.";
+  } catch {
+    return "The photo was not saved, because the connection failed.";
+  }
+}
 
 export function RegisterStudent({ student }: { student?: Student }) {
   const navigate = useNavigate();
@@ -103,6 +139,8 @@ export function RegisterStudent({ student }: { student?: Student }) {
   const enrollment = student?.enrollments[0];
   const [others, setOthers] = useState<Student[]>([]);
   const [siblingIds, setSiblingIds] = useState<string[]>(student?.siblings?.studentIds ?? []);
+  const [photo, setPhoto] = useState<Photo>();
+  const today = todayInPakistan(new Date());
 
   useEffect(() => {
     fetch("/api/students")
@@ -126,12 +164,13 @@ export function RegisterStudent({ student }: { student?: Student }) {
     const data = new FormData(event.currentTarget);
     const value = (name: string) => String(data.get(name) ?? "").trim();
     const body = {
-      firstName: value("firstName"),
-      lastName: value("lastName"),
-      fatherName: value("fatherName"),
+      firstName: capitalizeWords(value("firstName")),
+      lastName: capitalizeWords(value("lastName")),
+      fatherName: capitalizeWords(value("fatherName")),
       dateOfBirth: value("dateOfBirth"),
+      admissionDate: value("admissionDate"),
       gender: value("gender"),
-      guardian: { name: value("guardian.name"), relation: value("guardian.relation"), phone: toE164(value("guardian.phone")), ...(value("guardian.phone2") && { phone2: toE164(value("guardian.phone2")) }), cnic: toCnic(value("guardian.cnic")) },
+      guardian: { name: capitalizeWords(value("guardian.name")), relation: value("guardian.relation"), phone: toE164(value("guardian.phone")), ...(value("guardian.phone2") && { phone2: toE164(value("guardian.phone2")) }), cnic: toCnic(value("guardian.cnic")) },
       bFormNumber: toCnic(value("bFormNumber")),
       address: value("address"),
       familyStatus: value("familyStatus"),
@@ -174,11 +213,24 @@ export function RegisterStudent({ student }: { student?: Student }) {
       if (placed.ok) note.enrolledIn = gradeLabel(chosen.grade);
       else note.enrollProblem = placed.message;
     }
+    if (photo) {
+      const photoProblem = await uploadPhoto(note.studentId, photo);
+      if (photoProblem) note.photoProblem = photoProblem;
+    }
     setSaving(false);
     navigate("/students", { state: student ? { updated: note } : { registered: note } });
   }
 
   const clear = (name: string) => errors[name] && setErrors(({ [name]: _, ...rest }) => rest);
+  const typed = (name: string, format: (value: string) => string, set?: (value: string) => void) => ({
+    onChange: (event: { currentTarget: HTMLInputElement }) => {
+      clear(name);
+      retype(event.currentTarget, format);
+      set?.(event.currentTarget.value);
+    },
+  });
+  const nameField = (name: string, set?: (value: string) => void) => ({ autoComplete: "off", autoCapitalize: "words", ...typed(name, capitalizeWords, set) });
+  const cnicField = (name: string) => ({ inputMode: "numeric", placeholder: "35202-1234567-8", autoComplete: "off", maxLength: 15, ...typed(name, cnicAsTyped) });
   const line = (name: string, label: string, extra: object = {}) => (
     <TextInput name={name} label={label} error={errors[name]} onChange={() => clear(name)} classNames={{ input: "field-input" }} required withAsterisk={false} {...extra} />
   );
@@ -211,18 +263,50 @@ export function RegisterStudent({ student }: { student?: Student }) {
         <fieldset className="entry">
           <legend>Student</legend>
           <Text className="entry-hint">Write the names as on the B-form or birth certificate.</Text>
+          <Group gap="md">
+            <Avatar
+              src={photo?.preview ?? (student?.hasPhoto ? `/api/students/${student.studentId}/photo` : null)}
+              name={student ? `${student.firstName} ${student.lastName}` : undefined}
+              color="accent"
+              size={88}
+              radius="lg"
+              alt="Student photo"
+            />
+            <div>
+              <Text fw={500}>Photo (optional)</Text>
+              <Text size="sm" c="var(--md-on-surface-variant)">A clear photo of the face. It is made smaller before it is saved.</Text>
+              <Group gap="xs" mt={6}>
+                <FileButton
+                  accept="image/*"
+                  onChange={(file) => {
+                    setErrors(({ photo: _, ...rest }) => rest);
+                    if (file) toPhoto(file).then(setPhoto, () => setErrors((e) => ({ ...e, photo: "This file is not a picture. Choose a JPEG or PNG photo." })));
+                  }}
+                >
+                  {(props) => (
+                    <Button variant="default" size="compact-sm" {...props}>
+                      {photo || student?.hasPhoto ? "Change photo" : "Choose photo"}
+                    </Button>
+                  )}
+                </FileButton>
+                {photo && (
+                  <Button variant="subtle" size="compact-sm" onClick={() => setPhoto(undefined)}>
+                    Undo
+                  </Button>
+                )}
+              </Group>
+              {errors.photo && (
+                <Text role="alert" c="red" size="sm" mt={4}>
+                  {errors.photo}
+                </Text>
+              )}
+            </div>
+          </Group>
           <div className="pair">
-            {line("firstName", "First name", { autoFocus: true, autoComplete: "off", defaultValue: student?.firstName })}
-            {line("lastName", "Last name", { autoComplete: "off", defaultValue: student?.lastName })}
+            {line("firstName", "First name", { autoFocus: true, defaultValue: student?.firstName, ...nameField("firstName") })}
+            {line("lastName", "Last name", { defaultValue: student?.lastName, ...nameField("lastName") })}
           </div>
-          {line("fatherName", "Father name", {
-            autoComplete: "off",
-            value: fatherName,
-            onChange: (event: { currentTarget: HTMLInputElement }) => {
-              clear("fatherName");
-              setFatherName(event.currentTarget.value);
-            },
-          })}
+          {line("fatherName", "Father name", { value: fatherName, ...nameField("fatherName", setFatherName) })}
           <div className="pair">
             {line("dateOfBirth", "Date of birth", { type: "date", ...(student ? { defaultValue: student.dateOfBirth } : birthDateLimits(todayInPakistan(new Date()))) })}
             <Radio.Group name="gender" label="Gender" defaultValue={student?.gender} error={errors.gender} onChange={() => clear("gender")} required withAsterisk={false}>
@@ -233,33 +317,34 @@ export function RegisterStudent({ student }: { student?: Student }) {
             </Radio.Group>
           </div>
           {line("bFormNumber", "B-Form number", {
-            inputMode: "numeric",
-            placeholder: "35202-1234567-8",
-            autoComplete: "off",
+            ...cnicField("bFormNumber"),
             description: "The 13 digits on the B-Form (child registration certificate).",
             defaultValue: student?.bFormNumber ?? undefined,
           })}
-          <NativeSelect
-            key={year?.academicYearId}
-            name="classId"
-            label="Class"
-            defaultValue={enrollment?.classId}
-            description={
-              year === null || (year && year.classes.length === 0) ? (
-                <>
-                  No classes yet. Open them on the <Link to="/classes">Classes</Link> page, or enroll the student later.
-                </>
-              ) : year ? (
-                enrollment ? `Classes of ${year.name}.` : `Classes of ${year.name}. The student is enrolled right after you save.`
-              ) : undefined
-            }
-            data={[
-              ...(enrollment ? [] : [{ value: "", label: "Choose later" }]),
-              ...classGroups(year?.classes ?? []),
-            ]}
-            disabled={!year || year.classes.length === 0}
-            classNames={{ input: "field-input" }}
-          />
+          <div className="pair">
+            {line("admissionDate", "Admission date", { type: "date", max: today, defaultValue: student?.admissionDate ?? today })}
+            <NativeSelect
+              key={year?.academicYearId}
+              name="classId"
+              label="Class"
+              defaultValue={enrollment?.classId}
+              description={
+                year === null || (year && year.classes.length === 0) ? (
+                  <>
+                    No classes yet. Open them on the <Link to="/classes">Classes</Link> page, or enroll the student later.
+                  </>
+                ) : year ? (
+                  enrollment ? `Classes of ${year.name}.` : `Classes of ${year.name}. The student is enrolled right after you save.`
+                ) : undefined
+              }
+              data={[
+                ...(enrollment ? [] : [{ value: "", label: "Choose later" }]),
+                ...classGroups(year?.classes ?? []),
+              ]}
+              disabled={!year || year.classes.length === 0}
+              classNames={{ input: "field-input" }}
+            />
+          </div>
           <div className="pair">
             {line("previousSchoolName", "Previous school name (optional)", { required: false, maxLength: 200, autoComplete: "off", defaultValue: student?.previousSchoolName ?? undefined })}
             {line("previousClass", "Previous class (optional)", { required: false, maxLength: 50, autoComplete: "off", defaultValue: student?.previousClass ?? undefined })}
@@ -269,14 +354,12 @@ export function RegisterStudent({ student }: { student?: Student }) {
           <legend>Guardian</legend>
           <Text className="entry-hint">The office uses these phone numbers to reach the family.</Text>
           {line("guardian.name", "Guardian name", {
-            autoComplete: "off",
             value: shownGuardian,
             description: linked && relation === "father" ? "Filled in from the father name. Change it if someone else is the guardian." : undefined,
-            onChange: (event: { currentTarget: HTMLInputElement }) => {
-              clear("guardian.name");
+            ...nameField("guardian.name", (value) => {
               setLinked(false);
-              setGuardianName(event.currentTarget.value);
-            },
+              setGuardianName(value);
+            }),
           })}
           <div className="pair">
             <NativeSelect
@@ -302,7 +385,7 @@ export function RegisterStudent({ student }: { student?: Student }) {
               required
               withAsterisk={false}
             />
-            {line("guardian.cnic", "Guardian CNIC", { inputMode: "numeric", placeholder: "35202-1234567-8", autoComplete: "off", defaultValue: student?.guardian.cnic ?? undefined })}
+            {line("guardian.cnic", "Guardian CNIC", { ...cnicField("guardian.cnic"), defaultValue: student?.guardian.cnic ?? undefined })}
           </div>
           <div className="pair">
             {line("guardian.phone", "Phone No 1", { type: "tel", inputMode: "tel", placeholder: "0300 1234567", autoComplete: "off", defaultValue: student && toLocal(student.guardian.phone) })}
