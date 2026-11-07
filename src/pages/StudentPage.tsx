@@ -1,4 +1,4 @@
-import { Badge, Button, Group, Modal, Text, TextInput, Title } from "@mantine/core";
+import { Avatar, Badge, Button, Group, Modal, Text, TextInput, Title } from "@mantine/core";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router";
 import { toLocal } from "../phone.ts";
@@ -122,30 +122,33 @@ export function StudentPage() {
         Students
       </Link>
       <header className="page-head">
-        <div>
-          <Group gap="sm" align="center">
-            <Title order={1}>{name}</Title>
-            {student.leftOn ? (
-              <Badge color="gray" variant="light" tt="none">
-                Left on {showDate(student.leftOn)}
-              </Badge>
-            ) : (
-              <Badge color="green" variant="light" tt="none">
-                Active
-              </Badge>
-            )}
-          </Group>
-          <Text className="lead">
-            <span className="adm-mark">{student.admissionNumber}</span>
-            {enrollment ? (
-              <>
-                <Link to={`/classes/${enrollment.classId}`}>{gradeLabel(enrollment.grade)}</Link>, {enrollment.academicYearName}
-              </>
-            ) : (
-              "Not in a class yet"
-            )}
-          </Text>
-        </div>
+        <Group gap="lg" align="center" wrap="nowrap">
+          <Avatar src={student.hasPhoto ? `/api/students/${student.studentId}/photo` : null} name={name} color="accent" size={80} radius="lg" alt={`Photo of ${name}`} />
+          <div>
+            <Group gap="sm" align="center">
+              <Title order={1}>{name}</Title>
+              {student.leftOn ? (
+                <Badge color="gray" variant="light" tt="none">
+                  Left on {showDate(student.leftOn)}
+                </Badge>
+              ) : (
+                <Badge color="green" variant="light" tt="none">
+                  Active
+                </Badge>
+              )}
+            </Group>
+            <Text className="lead">
+              <span className="adm-mark">{student.admissionNumber}</span>
+              {enrollment ? (
+                <>
+                  <Link to={`/classes/${enrollment.classId}`}>{gradeLabel(enrollment.grade)}</Link>, {enrollment.academicYearName}
+                </>
+              ) : (
+                "Not in a class yet"
+              )}
+            </Text>
+          </div>
+        </Group>
         <Group gap="sm">
           <Leaving student={student} onDone={load} />
           <Button component={Link} to={`/students/${student.studentId}/fees`} variant="default" leftSection={<Icon name="fees" size={16} />}>
@@ -165,6 +168,10 @@ export function StudentPage() {
           <div>
             <dt>Date of birth</dt>
             <dd>{showDate(student.dateOfBirth)}</dd>
+          </div>
+          <div>
+            <dt>Admission date</dt>
+            <dd>{showDate(student.admissionDate)}</dd>
           </div>
           <div>
             <dt>Gender</dt>
