@@ -1,0 +1,12 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "schedule": ["* 0-5 * * 1"],
+  "packageRules": [
+    {
+      "description": "Only the stable nginx line, with an even minor number",
+      "matchPackageNames": ["nginxinc/nginx-unprivileged"],
+      "allowedVersions": "/^\\d+\\.\\d*[02468]\\.\\d+-alpine$/"
+    }
+  ]
+}
