@@ -15,6 +15,12 @@ const places: { to: string; label: string; text: string; icon: IconName }[] = [
   { to: "/classes", label: "Classes", text: "School years and their classes", icon: "classes" },
   { to: "/fees", label: "Fees", text: "Fee schedule and student balances", icon: "fees" },
   { to: "/expenses", label: "Expenses", text: "Money the school spends", icon: "expenses" },
+  { to: "/attendance", label: "Attendance", text: "Mark students and staff for a day", icon: "attendance" },
+  { to: "/exams", label: "Tests and exams", text: "Monthly tests, exams and results", icon: "exams" },
+  { to: "/staff", label: "Staff", text: "Teachers and other staff", icon: "staff" },
+  { to: "/calendar", label: "Calendar", text: "Holidays, exams, events and meetings", icon: "calendar" },
+  { to: "/notices", label: "Notices", text: "Notices and announcements, send on WhatsApp", icon: "notices" },
+  { to: "/stock", label: "Stock", text: "School stock and its changes", icon: "stock" },
   { to: "/reports", label: "Reports", text: "Collected and remaining fees, defaulters", icon: "reports" },
 ];
 

@@ -2224,3 +2224,97 @@ a.log-text:hover {
   font-weight: 500;
   white-space: nowrap;
 }
+
+.sheet-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+}
+
+.sheet-tools .group {
+  flex: 1 1 14rem;
+  max-width: 22rem;
+  margin-top: 0;
+}
+
+.sheet {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sheet li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+}
+
+.sheet li + li {
+  border-top: 1px solid var(--md-surface-container);
+}
+
+.sheet-person {
+  display: grid;
+  min-width: 0;
+  flex: 1 1 10rem;
+}
+
+.sheet .group {
+  flex: 0 1 17rem;
+  min-width: 0;
+  margin-top: 0;
+}
+
+.sheet-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--md-outline-variant);
+}
+
+.sheet .row-note {
+  color: var(--md-on-surface-variant);
+}
+
+.log .log-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+}
+
+.log-row > div {
+  display: grid;
+  flex: 1 1 12rem;
+  min-width: 0;
+  gap: 0.125rem;
+}
+
+.notice-body {
+  margin-top: 0.5rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.marks {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.marks .mantine-TextInput-root {
+  width: 5rem;
+}
+
+.stage-rows.class-rates li {
+  grid-template-columns: 5.25rem minmax(0, 1fr) 5.5rem;
+}
