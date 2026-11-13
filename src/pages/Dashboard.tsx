@@ -7,6 +7,7 @@ import { feeParts, feesByStage, overview, roundUp, smoothLine, wavyRing } from "
 import { toLocal } from "../phone.ts";
 import { feeReport, share } from "../report.ts";
 import { currentYear, gradeLabel, type Year } from "../school.ts";
+import { CampusCards } from "./CampusCards";
 import { ButtonGroup, Card, compact, hover, getJson, plural, rs, rsShort, TextLink } from "./cards";
 import { MoneyCards } from "./MoneyCards";
 import { AdmissionOverview, LeavingRecords, RecentActivity, StudentStrength } from "./SchoolCards";
@@ -449,6 +450,7 @@ function Overview({ students, years, accounts }: { students: Student[]; years: Y
       <div className="bento-narrow">
         <KeyFigures data={data} report={report} failed={failed} />
       </div>
+      <CampusCards year={year} years={years} />
       <div className="bento-wide">
         <AdmissionOverview students={students} year={year} />
       </div>

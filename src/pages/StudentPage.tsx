@@ -5,6 +5,7 @@ import { toLocal } from "../phone.ts";
 import { Icon } from "../icons";
 import { familyStatusLabel, gradeLabel, isStale, send, showDate, todayInPakistan, type Answer } from "../school.ts";
 import { signInUrl } from "../session";
+import { ProgressReport } from "./CampusCards";
 import type { Student } from "./Students";
 
 const relations: Record<string, string> = { father: "Father", mother: "Mother", guardian: "Guardian" };
@@ -258,6 +259,7 @@ export function StudentPage() {
           </div>
         </dl>
       </section>
+      <ProgressReport studentId={student.studentId} />
     </>
   );
 }
