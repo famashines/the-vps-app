@@ -4,15 +4,21 @@ import { useDisclosure } from "@mantine/hooks";
 import { Link, NavLink as RouterLink, Route, Routes } from "react-router";
 import { Icon } from "./icons";
 import { Search, SearchButton } from "./Search";
+import { Attendance } from "./pages/Attendance";
+import { CalendarPage } from "./pages/CalendarPage";
 import { ClassPage } from "./pages/ClassPage";
 import { Classes } from "./pages/Classes";
 import { Dashboard } from "./pages/Dashboard";
+import { Exams } from "./pages/Exams";
 import { Expenses } from "./pages/Expenses";
 import { Fees } from "./pages/Fees";
 import { NotFound } from "./pages/NotFound";
+import { Notices } from "./pages/Notices";
 import { Reports } from "./pages/Reports";
 import { EditStudent, RegisterStudent } from "./pages/RegisterStudent";
 import { NoAccess, SignIn } from "./pages/SignIn";
+import { Staff } from "./pages/Staff";
+import { Stock } from "./pages/Stock";
 import { StudentFees } from "./pages/StudentFees";
 import { StudentPage } from "./pages/StudentPage";
 import { Students } from "./pages/Students";
@@ -24,9 +30,15 @@ const pages = [
   { to: "/", label: "Dashboard", icon: "dashboard" },
   { to: "/students", label: "Students", icon: "students" },
   { to: "/classes", label: "Classes", icon: "classes" },
+  { to: "/attendance", label: "Attendance", icon: "attendance" },
+  { to: "/exams", label: "Tests and exams", icon: "exams" },
   { to: "/fees", label: "Fees", icon: "fees" },
   { to: "/expenses", label: "Expenses", icon: "expenses" },
   { to: "/reports", label: "Reports", icon: "reports" },
+  { to: "/staff", label: "Staff", icon: "staff" },
+  { to: "/calendar", label: "Calendar", icon: "calendar" },
+  { to: "/notices", label: "Notices", icon: "notices" },
+  { to: "/stock", label: "Stock", icon: "stock" },
 ] as const;
 
 export function App() {
@@ -115,6 +127,12 @@ function Shell({ user }: { user: User }) {
             <Route path="/students/:studentId/fees" element={<StudentFees user={user} />} />
             <Route path="/fees" element={<Fees />} />
             <Route path="/expenses" element={<Expenses />} />
+            <Route path="/staff" element={<Staff />} />
+            <Route path="/attendance" element={<Attendance />} />
+            <Route path="/calendar" element={<CalendarPage />} />
+            <Route path="/notices" element={<Notices />} />
+            <Route path="/exams" element={<Exams />} />
+            <Route path="/stock" element={<Stock />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/classes" element={<Classes />} />
             <Route path="/classes/:classId" element={<ClassPage />} />

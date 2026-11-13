@@ -11,6 +11,12 @@ const paths = {
   print: "M7 9V3h10v6M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v7H7z",
   fees: "M3 7h18v10H3zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 10v4M18 10v4",
   reports: "M4 20h16M7 16v-5M12 16V6M17 16v-8",
+  staff: "M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM5 21v-1a7 7 0 0 1 14 0v1M9 15l3 3 3-3",
+  attendance: "M5 4h14v17H5zM9 2v4M15 2v4M8.5 13l2.5 2.5 4.5-5",
+  calendar: "M4 5h16v16H4zM4 10h16M8 3v4M16 3v4",
+  notices: "M4 10v4h3l6 4V6l-6 4zM16.5 9a4 4 0 0 1 0 6M19 6.5a8 8 0 0 1 0 11",
+  exams: "M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5",
+  stock: "M3 8l9-5 9 5v8l-9 5-9-5zM3 8l9 5 9-5M12 13v8",
   expenses: "M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6",
 };
 
