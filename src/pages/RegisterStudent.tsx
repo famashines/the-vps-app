@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { cnicAsTyped, toCnic } from "../cnic.ts";
 import { capitalizeWords } from "../names.ts";
-import { toE164, toLocal } from "../phone.ts";
+import { isMobile, phoneAsTyped, toE164, toLocal } from "../phone.ts";
 import { FAMILY_STATUSES, birthDateLimits, classGroups, currentYear, gradeLabel, isStale, send, todayInPakistan, type Year } from "../school.ts";
 import { signInUrl } from "../session";
 import type { Student } from "./Students";
@@ -20,6 +20,7 @@ const labels: Record<string, string> = {
   bFormNumber: "B-Form number",
   previousSchoolName: "Previous school name",
   previousClass: "Previous class",
+  testRemarks: "Test remarks",
   "guardian.name": "Guardian name",
   "guardian.relation": "Relation",
   "guardian.cnic": "Guardian CNIC",
@@ -32,9 +33,11 @@ const labels: Record<string, string> = {
   "siblings.studentIds": "Siblings in this school",
 };
 
+const phoneMessage = "Enter the 11 digits of the mobile number, for example 0300 1234567.";
+
 const messageFor = (field: string, message: string) => {
   if (/^[A-Z]/.test(message)) return message;
-  if (field === "guardian.phone" || field === "guardian.phone2") return "Enter a mobile number, for example 0300 1234567.";
+  if (field === "guardian.phone" || field === "guardian.phone2") return phoneMessage;
   if (field === "bFormNumber" || field === "guardian.cnic") return "Enter the 13 digits, for example 35202-1234567-8.";
   if (field === "dateOfBirth") return message.includes("years old") ? "The student must be 2 to 25 years old." : "Enter a real date.";
   if (field === "admissionDate") return "Enter a real date.";
@@ -86,6 +89,7 @@ const detailsOf = (s: Student) => ({
   siblings: s.siblings,
   ...(s.previousSchoolName && { previousSchoolName: s.previousSchoolName }),
   ...(s.previousClass && { previousClass: s.previousClass }),
+  ...(s.testRemarks && { testRemarks: s.testRemarks }),
 });
 
 const studentLabel = (s: Student) => `${s.firstName} ${s.lastName} (${s.admissionNumber})`;
@@ -159,6 +163,13 @@ export function RegisterStudent({ student }: { student?: Student }) {
 
   const shownGuardian = linked && relation === "father" ? fatherName : guardianName;
 
+  function showErrors(next: FieldErrors) {
+    setErrors(next);
+    setProblem("Check the marked fields.");
+    const first = Object.keys(labels).find((name) => next[name]);
+    form.current?.querySelector<HTMLElement>(`[name="${first}"]`)?.focus();
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
@@ -178,7 +189,10 @@ export function RegisterStudent({ student }: { student?: Student }) {
       siblings: { count: Number(value("siblings.count")), studentIds: siblingIds },
       ...(value("previousSchoolName") && { previousSchoolName: value("previousSchoolName") }),
       ...(value("previousClass") && { previousClass: value("previousClass") }),
+      ...(value("testRemarks") && { testRemarks: value("testRemarks") }),
     };
+    const wrongPhones = ["guardian.phone", "guardian.phone2"].filter((name) => value(name) && !isMobile(value(name)));
+    if (wrongPhones.length) return showErrors(Object.fromEntries(wrongPhones.map((name) => [name, phoneMessage])));
     setSaving(true);
     setProblem(undefined);
     const unchanged = student && JSON.stringify(body) === JSON.stringify(detailsOf(student));
@@ -193,11 +207,7 @@ export function RegisterStudent({ student }: { student?: Student }) {
       if (Object.keys(answer.fields).length) {
         const next: FieldErrors = {};
         for (const [field, message] of Object.entries(answer.fields)) next[field] = messageFor(field, message);
-        setErrors(next);
-        setProblem("Check the marked fields.");
-        const first = Object.keys(labels).find((name) => next[name]);
-        form.current?.querySelector<HTMLElement>(`[name="${first}"]`)?.focus();
-        return;
+        return showErrors(next);
       }
       setStale(isStale(answer));
       setProblem(answer.message);
@@ -230,6 +240,7 @@ export function RegisterStudent({ student }: { student?: Student }) {
     },
   });
   const nameField = (name: string, set?: (value: string) => void) => ({ autoComplete: "off", autoCapitalize: "words", ...typed(name, capitalizeWords, set) });
+  const phoneField = (name: string) => ({ type: "tel", inputMode: "numeric", autoComplete: "off", description: "11 digits, starts with 03.", inputWrapperOrder: ["label", "input", "description", "error"], ...typed(name, phoneAsTyped) });
   const cnicField = (name: string) => ({ inputMode: "numeric", placeholder: "35202-1234567-8", autoComplete: "off", maxLength: 15, ...typed(name, cnicAsTyped) });
   const line = (name: string, label: string, extra: object = {}) => (
     <TextInput name={name} label={label} error={errors[name]} onChange={() => clear(name)} classNames={{ input: "field-input" }} required withAsterisk={false} {...extra} />
@@ -349,6 +360,18 @@ export function RegisterStudent({ student }: { student?: Student }) {
             {line("previousSchoolName", "Previous school name (optional)", { required: false, maxLength: 200, autoComplete: "off", defaultValue: student?.previousSchoolName ?? undefined })}
             {line("previousClass", "Previous class (optional)", { required: false, maxLength: 50, autoComplete: "off", defaultValue: student?.previousClass ?? undefined })}
           </div>
+          <Textarea
+            name="testRemarks"
+            label="Test remarks (optional)"
+            description="The remarks from the admission test."
+            maxLength={500}
+            autosize
+            minRows={2}
+            defaultValue={student?.testRemarks ?? undefined}
+            error={errors.testRemarks}
+            onChange={() => clear("testRemarks")}
+            classNames={{ input: "field-input" }}
+          />
         </fieldset>
         <fieldset className="entry">
           <legend>Guardian</legend>
@@ -388,8 +411,8 @@ export function RegisterStudent({ student }: { student?: Student }) {
             {line("guardian.cnic", "Guardian CNIC", { ...cnicField("guardian.cnic"), defaultValue: student?.guardian.cnic ?? undefined })}
           </div>
           <div className="pair">
-            {line("guardian.phone", "Phone No 1", { type: "tel", inputMode: "tel", placeholder: "0300 1234567", autoComplete: "off", defaultValue: student && toLocal(student.guardian.phone) })}
-            {line("guardian.phone2", "Phone No 2 (optional)", { required: false, type: "tel", inputMode: "tel", placeholder: "0321 1234567", autoComplete: "off", defaultValue: student?.guardian.phone2 ? toLocal(student.guardian.phone2) : undefined })}
+            {line("guardian.phone", "Phone No 1", { ...phoneField("guardian.phone"), placeholder: "0300 1234567", defaultValue: student && toLocal(student.guardian.phone) })}
+            {line("guardian.phone2", "Phone No 2 (optional)", { ...phoneField("guardian.phone2"), required: false, placeholder: "0321 1234567", defaultValue: student?.guardian.phone2 ? toLocal(student.guardian.phone2) : undefined })}
           </div>
           <Textarea
             name="address"

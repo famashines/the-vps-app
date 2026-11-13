@@ -202,6 +202,10 @@ export function StudentPage() {
             <dd>{student.previousClass ?? notGiven}</dd>
           </div>
           <div>
+            <dt>Test remarks</dt>
+            <dd>{student.testRemarks ?? notGiven}</dd>
+          </div>
+          <div>
             <dt>Guardian CNIC</dt>
             <dd className="num">{student.guardian.cnic ?? notGiven}</dd>
           </div>
