@@ -62,14 +62,25 @@ function StaffToday({ summary, today }: { summary: Loaded<Summary>; today: strin
       ) : !counts ? (
         <Text className="card-text">The staff attendance of today is not marked.</Text>
       ) : (
-        <ul className="rows">
-          {(["present", "absent", "leave"] as const).map((status) => (
-            <li key={status}>
-              <span>{status === "leave" ? "On leave" : status === "present" ? "Present" : "Absent"}</span>
-              <b>{counts[status]}</b>
-            </li>
-          ))}
-        </ul>
+        <>
+          {counts.teachers && (
+            <p className="card-lead">
+              <strong>
+                {counts.teachers.present} of {counts.teachers.present + counts.teachers.absent + counts.teachers.leave}
+              </strong>{" "}
+              teachers present
+            </p>
+          )}
+          <Text className="card-text">All staff today:</Text>
+          <ul className="rows">
+            {(["present", "absent", "leave"] as const).map((status) => (
+              <li key={status}>
+                <span>{status === "leave" ? "On leave" : status === "present" ? "Present" : "Absent"}</span>
+                <b>{counts[status]}</b>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </Card>
   );
@@ -79,11 +90,11 @@ function OverTime({ summary, today }: { summary: Loaded<Summary>; today: string 
   const [who, setWho] = useState("Students");
   const body = () => {
     if (typeof summary === "string") return <CardState state={summary} what="the attendance over time" />;
-    const days = rateByDay(who === "Students" ? summary.students : summary.staff, lastDays(today, 30));
+    const days = rateByDay(who === "Students" ? summary.students : who === "Staff" ? summary.staff : summary.staff.flatMap((s) => (s.teachers ? [{ date: s.date, ...s.teachers }] : [])), lastDays(today, 30));
     const done = days.filter((d) => d.rate !== undefined);
     return (
       <>
-        <ButtonGroup label="Choose students or staff" value={who} onChange={setWho} data={["Students", "Staff"]} />
+        <ButtonGroup label="Choose students, teachers or staff" value={who} onChange={setWho} data={["Students", "Teachers", "Staff"]} />
         {done.length === 0 ? (
           <Text className="card-text">No {who.toLowerCase()} attendance is marked in the last 30 days.</Text>
         ) : (

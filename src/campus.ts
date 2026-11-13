@@ -1,7 +1,7 @@
 export type Status = "present" | "absent" | "leave";
 export type Counts = { present: number; absent: number; leave: number };
 export type ClassDay = Counts & { classId: string; date: string };
-export type StaffDay = Counts & { date: string };
+export type StaffDay = Counts & { date: string } & { teachers?: Counts };
 export type Summary = { students: ClassDay[]; staff: StaffDay[] };
 export type Sheet<K extends string> = { sheetId: string; classId?: string; date: string; version: number; marks: ({ status: Status } & Record<K, string>)[] };
 export type StaffMember = { staffId: string; version: number; name: string; role: string; phone: string | null; joinedOn: string; leftOn: string | null };
