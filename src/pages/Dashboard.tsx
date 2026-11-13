@@ -9,6 +9,7 @@ import { feeReport, share } from "../report.ts";
 import { currentYear, gradeLabel, type Year } from "../school.ts";
 import { ButtonGroup, Card, compact, hover, getJson, plural, rs, rsShort, TextLink } from "./cards";
 import { MoneyCards } from "./MoneyCards";
+import { AdmissionOverview, LeavingRecords, RecentActivity, StudentStrength } from "./SchoolCards";
 import type { Student } from "./Students";
 
 type State = { status: "loading" } | { status: "failed" } | { status: "loaded"; students: Student[]; years: Year[]; accounts: AccountSummary[] | null };
@@ -447,6 +448,18 @@ function Overview({ students, years, accounts }: { students: Student[]; years: Y
       </div>
       <div className="bento-narrow">
         <KeyFigures data={data} report={report} failed={failed} />
+      </div>
+      <div className="bento-wide">
+        <AdmissionOverview students={students} year={year} />
+      </div>
+      <div className="bento-narrow">
+        <StudentStrength data={data} students={students} year={year} />
+      </div>
+      <div className="bento-wide">
+        <RecentActivity />
+      </div>
+      <div className="bento-narrow">
+        <LeavingRecords students={students} year={year} />
       </div>
     </div>
   );
