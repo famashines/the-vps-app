@@ -142,9 +142,9 @@ function TakePayment({ account, opened, onClose, onPaid }: { account: Account; o
   );
 }
 
-type Target = { kind: "charge" | "payment"; id: string; label: string };
+export type Target = { kind: "charge" | "payment" | "expense"; id: string; label: string };
 
-function Reverse({ target, onClose, onDone }: { target?: Target; onClose: () => void; onDone: () => void }) {
+export function Reverse({ target, onClose, onDone }: { target?: Target; onClose: () => void; onDone: () => void }) {
   const [key, setKey] = useState(() => crypto.randomUUID());
   const [problem, setProblem] = useState<string>();
   const [saving, setSaving] = useState(false);
@@ -162,7 +162,7 @@ function Reverse({ target, onClose, onDone }: { target?: Target; onClose: () => 
     const reason = String(new FormData(event.currentTarget).get("reason")).trim();
     if (!shown || !reason) return setProblem("Write why the entry is reversed.");
     setSaving(true);
-    const answer = await send(`/api/fees/${shown.kind === "charge" ? "charges" : "payments"}/${shown.id}/reversal`, { reason }, key);
+    const answer = await send(`/api/fees/${shown.kind}s/${shown.id}/reversal`, { reason }, key);
     setSaving(false);
     if (!answer.ok) return setProblem(answer.fields.reason ? "Write a reason of 1 to 500 characters." : answer.message);
     onDone();
@@ -172,7 +172,7 @@ function Reverse({ target, onClose, onDone }: { target?: Target; onClose: () => 
     <Modal opened={!!target} onClose={onClose} title={shown && `Reverse ${shown.kind}`} centered>
       <form onSubmit={submit} className="edit-form">
         <Text className="panel-text">
-          {shown?.label}. The full amount is reversed. The entry stays in the ledger with the reason{shown?.kind === "payment" ? ", and its receipt number is not used again" : ""}.
+          {shown?.label}. The full amount is reversed. The entry stays in the {shown?.kind === "expense" ? "record" : "ledger"} with the reason{shown?.kind === "payment" ? ", and its receipt number is not used again" : ""}.
         </Text>
         <Textarea name="reason" label="Reason" maxLength={500} autosize minRows={2} data-autofocus error={problem} classNames={{ input: "field-input" }} required withAsterisk={false} />
         <Group gap="sm">

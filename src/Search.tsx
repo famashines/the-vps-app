@@ -14,6 +14,7 @@ const places: { to: string; label: string; text: string; icon: IconName }[] = [
   { to: "/students/new", label: "Register a student", text: "New admission", icon: "add" },
   { to: "/classes", label: "Classes", text: "School years and their classes", icon: "classes" },
   { to: "/fees", label: "Fees", text: "Fee schedule and student balances", icon: "fees" },
+  { to: "/expenses", label: "Expenses", text: "Money the school spends", icon: "expenses" },
   { to: "/reports", label: "Reports", text: "Collected and remaining fees, defaulters", icon: "reports" },
 ];
 

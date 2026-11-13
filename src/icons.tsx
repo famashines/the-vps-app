@@ -11,6 +11,7 @@ const paths = {
   print: "M7 9V3h10v6M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v7H7z",
   fees: "M3 7h18v10H3zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 10v4M18 10v4",
   reports: "M4 20h16M7 16v-5M12 16V6M17 16v-8",
+  expenses: "M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6",
 };
 
 export type IconName = keyof typeof paths;
