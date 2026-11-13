@@ -1,6 +1,6 @@
 import { Text, Tooltip } from "@mantine/core";
 import { useEffect, useState } from "react";
-import { flowByDay, flowByMonth, moneyFigures, type Flow, type FlowDay } from "../cashflow.ts";
+import { categoryLabel, expenseTotals, flowByDay, flowByMonth, moneyFigures, type Expense, type Flow, type FlowDay } from "../cashflow.ts";
 import { roundUp } from "../overview.ts";
 import { showDate, todayInPakistan, type Year } from "../school.ts";
 import { ButtonGroup, Card, CardState, compact, getJson, hover, rs, rsShort, TextLink, Tile } from "./cards";
@@ -107,6 +107,61 @@ function FlowChart({ title, link, flow, from, today, series, empty }: { title: s
   );
 }
 
+function FinancialOverview({ flow, year, today, dues }: { flow: FlowState; year: Year; today: string; dues: number | null }) {
+  const [expenses, setExpenses] = useState<Expense[] | "loading" | "failed">("loading");
+
+  useEffect(() => {
+    getJson(`/api/fees/expenses?from=${year.startsOn}&to=${today}`).then(setExpenses, () => setExpenses("failed"));
+  }, [year.startsOn, today]);
+
+  const body = () => {
+    if (typeof flow === "string") return <CardState state={flow} what="the financial overview" />;
+    const f = moneyFigures(flow, year.startsOn, today).year;
+    const rows = [
+      ["Fees charged", rs(f.charged)],
+      ["Income", rs(f.income)],
+      ["Expense", rs(f.spent)],
+      [f.income - f.spent < 0 ? "Loss" : "Profit", rs(Math.abs(f.income - f.spent))],
+      ["Total dues", dues === null ? "Not loaded" : rs(dues)],
+    ];
+    const totals = typeof expenses === "string" ? undefined : expenseTotals(expenses);
+    return (
+      <div className="split">
+        <ul className="rows">
+          {rows.map(([name, value]) => (
+            <li key={name}>
+              <span>{name}</span>
+              <b>{value}</b>
+            </li>
+          ))}
+        </ul>
+        {typeof expenses === "string" ? (
+          <CardState state={expenses} what="the expenses by category" />
+        ) : totals!.total === 0 ? (
+          <Text className="card-text">No expense is recorded in {year.name}.</Text>
+        ) : (
+          <ul className="share-rows" aria-label="Expenses by category">
+            {totals!.byCategory.map((c) => (
+              <li key={c.category}>
+                <span>{categoryLabel(c.category)}</span>
+                <span className="track">
+                  <i style={{ width: `${(c.amount / totals!.byCategory[0].amount) * 100}%` }} />
+                </span>
+                <b>{rsShort(c.amount)}</b>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  };
+  return (
+    <Card title={`Financial overview ${year.name}`} action={<TextLink to="/reports">Reports</TextLink>}>
+      {body()}
+    </Card>
+  );
+}
+
 export function MoneyCards({ year, dues }: { year: Year; dues: number | null }) {
   const today = todayInPakistan(new Date());
   const from = year.startsOn;
@@ -153,6 +208,9 @@ export function MoneyCards({ year, dues }: { year: Year; dues: number | null }) 
           ]}
           empty="No payment or expense is recorded in this period."
         />
+      </div>
+      <div className="bento-full">
+        <FinancialOverview flow={flow} year={year} today={to} dues={dues} />
       </div>
     </>
   );

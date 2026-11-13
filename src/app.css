@@ -2138,3 +2138,89 @@ select:focus-visible,
   max-width: 14rem;
   margin-bottom: 1rem;
 }
+
+.log {
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+}
+
+.log li {
+  display: grid;
+  gap: 0.125rem;
+  padding: 0.625rem 0;
+}
+
+.log li + li {
+  border-top: 1px solid var(--md-surface-container);
+}
+
+.log-text {
+  color: var(--md-on-surface);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+a.log-text {
+  text-decoration: none;
+}
+
+a.log-text:hover {
+  text-decoration: underline;
+}
+
+.log-note {
+  color: var(--md-on-surface-variant);
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 2rem;
+}
+
+@media (max-width: 48em) {
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.share-rows {
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+}
+
+.share-rows li {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.5rem 0;
+  color: var(--md-on-surface-variant);
+}
+
+.share-rows span.track {
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--md-surface-container);
+  overflow: hidden;
+}
+
+.share-rows span.track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--chart-amber);
+  forced-color-adjust: none;
+}
+
+.share-rows b {
+  color: var(--md-on-surface);
+  font-weight: 500;
+  white-space: nowrap;
+}
