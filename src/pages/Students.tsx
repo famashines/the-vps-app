@@ -28,6 +28,7 @@ export type Student = {
   siblings: { count: number; studentIds: string[] } | null;
   previousSchoolName: string | null;
   previousClass: string | null;
+  testRemarks: string | null;
   leftOn: string | null;
   leftReason: string | null;
   hasPhoto: boolean;
