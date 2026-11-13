@@ -1,14 +1,14 @@
 import { Avatar, Button, Text, Title, Tooltip } from "@mantine/core";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import type { AccountSummary } from "../fees.ts";
 import { Icon, type IconName } from "../icons";
-import { pkr, showMoney } from "../money.ts";
 import { feeParts, feesByStage, overview, roundUp, smoothLine, wavyRing } from "../overview.ts";
 import { toLocal } from "../phone.ts";
 import { feeReport, share } from "../report.ts";
 import { currentYear, gradeLabel, type Year } from "../school.ts";
-import { signInUrl } from "../session";
+import { ButtonGroup, Card, compact, hover, getJson, plural, rs, rsShort, TextLink } from "./cards";
+import { MoneyCards } from "./MoneyCards";
 import type { Student } from "./Students";
 
 type State = { status: "loading" } | { status: "failed" } | { status: "loaded"; students: Student[]; years: Year[]; accounts: AccountSummary[] | null };
@@ -21,52 +21,7 @@ const greeting = () => {
 };
 
 const today = () => new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date());
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
-const rs = (paisa: number) => showMoney(pkr(paisa));
-const compact = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 });
-const rsShort = (paisa: number) => `Rs ${compact.format(paisa / 100)}`;
 const shortGrade = (grade: string) => (grade === "playgroup" ? "PG" : grade.startsWith("class-") ? grade.slice(6) : gradeLabel(grade).replace("-", ""));
-const hover = { hover: true, focus: true, touch: false };
-
-async function getJson(path: string) {
-  const response = await fetch(path);
-  if (response.status === 401) location.assign(signInUrl());
-  if (!response.ok) throw new Error(path);
-  return response.json();
-}
-
-function ButtonGroup({ label, value, onChange, data }: { label: string; value: string; onChange: (value: string) => void; data: string[] }) {
-  return (
-    <div className="group" role="group" aria-label={label}>
-      {data.map((item) => (
-        <button key={item} type="button" aria-pressed={item === value} onClick={() => onChange(item)}>
-          {item}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function Card({ title, action, className = "", children }: { title: string; action?: ReactNode; className?: string; children: ReactNode }) {
-  return (
-    <section className={`card ${className}`} aria-label={title}>
-      <div className="card-head">
-        <Title order={2}>{title}</Title>
-        {action}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function TextLink({ to, children }: { to: string; children: ReactNode }) {
-  return (
-    <Link to={to} className="card-link">
-      {children}
-      <Icon name="arrow" size={14} />
-    </Link>
-  );
-}
 
 function FeesMissing({ failed }: { failed: boolean }) {
   if (failed)
@@ -463,6 +418,7 @@ function Overview({ students, years, accounts }: { students: Student[]; years: Y
   const report = feeReport((accounts ?? []).filter((a) => a.academicYearId === year.academicYearId));
   return (
     <div className="bento">
+      <MoneyCards year={year} dues={failed ? null : report.total.remaining} />
       <div className="bento-lead">
         <FeeHero report={report} failed={failed} />
         <div className="stats">
