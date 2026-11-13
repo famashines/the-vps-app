@@ -7,6 +7,7 @@ import { Search, SearchButton } from "./Search";
 import { ClassPage } from "./pages/ClassPage";
 import { Classes } from "./pages/Classes";
 import { Dashboard } from "./pages/Dashboard";
+import { Expenses } from "./pages/Expenses";
 import { Fees } from "./pages/Fees";
 import { NotFound } from "./pages/NotFound";
 import { Reports } from "./pages/Reports";
@@ -24,6 +25,7 @@ const pages = [
   { to: "/students", label: "Students", icon: "students" },
   { to: "/classes", label: "Classes", icon: "classes" },
   { to: "/fees", label: "Fees", icon: "fees" },
+  { to: "/expenses", label: "Expenses", icon: "expenses" },
   { to: "/reports", label: "Reports", icon: "reports" },
 ] as const;
 
@@ -112,6 +114,7 @@ function Shell({ user }: { user: User }) {
             <Route path="/students/:studentId/edit" element={<EditStudent />} />
             <Route path="/students/:studentId/fees" element={<StudentFees user={user} />} />
             <Route path="/fees" element={<Fees />} />
+            <Route path="/expenses" element={<Expenses />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/classes" element={<Classes />} />
             <Route path="/classes/:classId" element={<ClassPage />} />
